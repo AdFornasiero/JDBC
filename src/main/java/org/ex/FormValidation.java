@@ -20,18 +20,22 @@ RULES LIST
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class FormValidation {
 
     private static List<String> errors = new ArrayList<>();
+    private static HashMap<String, String> messages = new HashMap<>();
     private final static String[] numericalArgs = {"equals", "min", "max", "min_length", "max_length"};
     private final static String[] numericalRules = {"equals", "min", "max"};
 
+    // CREER GETTER POUR RECUP LE HASHMAP DE MSGS D'ERREURS
 
     public static List<String> validField(String value, String[] rules){
         errors.clear();
-        int intArg = 0, intValue = 0;
+        int intArg = 0;
+        long intValue = 0;
         String arg = "";
 
         for(String rule: rules) {
@@ -54,14 +58,13 @@ public class FormValidation {
                 }
             }
 
-            // Search for rules that need numerical value and parse it
+            // Search if rule needs numerical value and parse it
             for(String numericalRule: numericalRules) {
                 if(rule.equals(numericalRule)){
                     try{
-                        intValue = Integer.parseInt(value);
+                        intValue = Long.parseLong(value);
                     }
                     catch(Exception e){
-                        System.out.println(intValue + " parsed");
                     }
                 }
             }
@@ -70,36 +73,42 @@ public class FormValidation {
                 case "required":
                     if(value.isBlank()) errors.add("Champs obligatoire");
                     break;
+
                 case "integer":
                     integer(value);
                     break;
-                case "min_length":
-                    min_length(value, intArg);
-                    break;
-                case "max_length":
-                    max_length(value, intArg);
-                    break;
-                case "min":
-                    min(intValue, intArg);
-                    break;
-                case "max":
-                    max(intValue, intArg);
-                    break;
-                case "equals":
-                    equal(intValue, intArg);
-                    break;
+
                 case "email":
                     email(value);
                     break;
+
+                case "min_length":
+                    if(value.length() < intArg) errors.add("Longueur min req");
+                    break;
+
+                case "max_length":
+                    if(value.length() > intArg) errors.add("Longueur max req");
+                    break;
+
+                case "min":
+                    if(intValue < intArg) errors.add("Valeur minimale requise");
+                    break;
+
+                case "max":
+                    if(intValue > intArg) errors.add("Valeur maximale requise");
+                    break;
+
+                case "equals":
+                    if(intValue != intArg) errors.add("Valeur exact requise");
+                    break;
                 case "matches":
-                    matches(value, arg);
+                    if(!value.equals(arg)) errors.add("pas pareil");
                     break;
                 case "regex":
-                    regex(value, arg);
+                    if(!value.matches(arg)) errors.add("pas matché");
                     break;
                 default:
-                    System.out.println("ERREUR");
-
+                    System.out.println("Validation error: \'" + rule + "\' rule does not exist");
             }
 
         }
@@ -107,40 +116,23 @@ public class FormValidation {
     }
 
 
-
     private static void regex(String value, String arg) {
+
     }
 
     private static void email(String value) {
+        String emailRegex = "";
+        if(!value.matches(emailRegex))
+            errors.add("pas bon email");
     }
 
     private static void integer(String value){
- 
-    }
-
-    private static void matches(String value, String arg) {
-        if(value.equals(arg)) errors.add("pas matché");
-    }
-
-    private static void min(int value, int min){
-        if(value < min) errors.add("Valeur minimale requise");
-    }
-
-    private static void max(int value, int max){
-        if(value > max) errors.add("Valeur maximale requise");
-    }
-
-    private static void equal(int value, int arg) {
-        if(value != arg) errors.add("Valeur exact requise");
-    }
-
-    private static void min_length(String value, int min){
-        if(value.length() < min) errors.add("Longueur min req");
-
-    }
-
-    private static void max_length(String value, int max){
-        if(value.length() > max) errors.add("Longueur max req");
+        try{
+            Long.parseLong(value);
+        }
+        catch(Exception e){
+            errors.add("Pas entier");
+        }
     }
 
 

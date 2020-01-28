@@ -21,7 +21,7 @@ public class Validation {
     }
 
     public void add(ActionEvent actionEvent) {
-        String[] rules = {"required","min_length(20)","max_length(8)", "min(820)", "max(10)"};
+        String[] rules = {"email"};
         List<String> errors;
         errors = FormValidation.validField(tf_adress.getText(),rules);
         System.out.println(errors.toString());
