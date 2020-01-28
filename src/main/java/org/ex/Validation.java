@@ -19,9 +19,8 @@ public class Validation {
     }
 
     public void add(ActionEvent actionEvent) {
-        
-        String[] rules = {"required","min_length(2)","max_length(8)"};
-
+        String[] rules = {"required","min_length(250)","max_length(8)"};
+        FormValidation.validField(tf_adress.getText(),rules);
         
     }
 }
