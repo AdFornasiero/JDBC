@@ -4,6 +4,8 @@ import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 
+import java.util.List;
+
 public class Validation {
 
     public TextField tf_city, tf_contact, tf_zip, tf_adress, tf_name;
@@ -19,8 +21,9 @@ public class Validation {
     }
 
     public void add(ActionEvent actionEvent) {
-        String[] rules = {"required","min_length(250)","max_length(8)"};
-        FormValidation.validField(tf_adress.getText(),rules);
-        
+        String[] rules = {"required","min_length(20)","max_length(8)", "min(820)", "max(10)"};
+        List<String> errors;
+        errors = FormValidation.validField(tf_adress.getText(),rules);
+        System.out.println(errors.toString());
     }
 }
