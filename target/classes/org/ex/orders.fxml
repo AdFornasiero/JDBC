@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<AnchorPane prefHeight="288.0" prefWidth="444.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.ex.Orders">
+   <children>
+      <Label layoutX="58.0" layoutY="38.0" text="Fournisseur: ">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <TextArea fx:id="ta_orders" editable="false" layoutX="52.0" layoutY="95.0" prefHeight="157.0" prefWidth="340.0" />
+      <ComboBox fx:id="cb_supplier" layoutX="154.0" layoutY="36.0" onAction="#getOrders" prefHeight="25.0" prefWidth="248.0" promptText="Sélectionnez..." />
+   </children>
+</AnchorPane>
