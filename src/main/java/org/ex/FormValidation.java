@@ -2,22 +2,21 @@ package org.ex;
 
 /*
 RULES LIST
-    required
-    integer
-    email
-    minlength(int)
-    maxlength(int)
-    regex(string)
-    matches(string)
-    exists(table.field) // if exists in db
-    unique(table.field) // if not exists in db
-    // NUMERICAL VALUES
-    equals(int)
-    min(int)
-    max(int)
+    required    integer    email
+    minlength(int)    maxlength(int)
+    regex(string)    matches(string)
+    exists(table.field)    unique(table.field)
+    equals(int)    min(int)    max(int)
+
+    ***** HOW TO USE *****
+
+
  */
 
 
+import org.w3c.dom.ls.LSOutput;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,18 +24,39 @@ import java.util.List;
 
 public class FormValidation {
 
+    // Rules which will produce an error
     private static List<String> errors = new ArrayList<>();
-    private static HashMap<String, String> messages = new HashMap<>();
+    // Error messages that will be return
+    private static HashMap<String, String> finalMessages = new HashMap<>();
+    private static HashMap<String, String> customMessages = new HashMap<>();
+    // Rules that need a numerical argument
     private final static String[] numericalArgs = {"equals", "min", "max", "min_length", "max_length"};
+    // Rules that need the value to be numerical
     private final static String[] numericalRules = {"equals", "min", "max"};
 
-    // CREER GETTER POUR RECUP LE HASHMAP DE MSGS D'ERREURS
+    private static Connection db;
+    private static PreparedStatement stmt;
+    private static String query = "select * from table where field like ?";
+
+
+
+
+    public static void setDatabase(String dburl, String usr, String pwd){
+        try {
+            db = DriverManager.getConnection(dburl, usr, pwd);
+        } catch (SQLException e) {
+            System.out.println("Validation error: unable to access database.\n" + e.getMessage());
+        }
+    }
+
 
     public static List<String> validField(String value, String[] rules){
         errors.clear();
+        finalMessages.clear();
         int intArg = 0;
         long intValue = 0;
         String arg = "";
+
 
         for(String rule: rules) {
             // Check if an argument has been provided
@@ -71,42 +91,53 @@ public class FormValidation {
 
             switch(rule){
                 case "required":
-                    if(value.isBlank()) errors.add("Champs obligatoire");
+                    if(value.isBlank()) errors.add("required");
                     break;
 
                 case "integer":
                     integer(value);
                     break;
 
+                case "regex":
+                    regex(value, arg);
+                    break;
+
                 case "email":
                     email(value);
                     break;
 
+                case "exists":
+                    exists(value, arg);
+                    break;
+
+                case "unique":
+                    unique(value, arg);
+                    break;
+
                 case "min_length":
-                    if(value.length() < intArg) errors.add("Longueur min req");
+                    if(value.length() < intArg) errors.add("min_length");
                     break;
 
                 case "max_length":
-                    if(value.length() > intArg) errors.add("Longueur max req");
+                    if(value.length() > intArg) errors.add("max_length");
                     break;
 
                 case "min":
-                    if(intValue < intArg) errors.add("Valeur minimale requise");
+                    if(intValue < intArg) errors.add("min");
                     break;
 
                 case "max":
-                    if(intValue > intArg) errors.add("Valeur maximale requise");
+                    if(intValue > intArg) errors.add("max");
                     break;
 
                 case "equals":
-                    if(intValue != intArg) errors.add("Valeur exact requise");
+                    if(intValue != intArg) errors.add("equals");
                     break;
+
                 case "matches":
-                    if(!value.equals(arg)) errors.add("pas pareil");
+                    if(!value.equals(arg)) errors.add("matches");
                     break;
-                case "regex":
-                    if(!value.matches(arg)) errors.add("pas matché");
-                    break;
+
                 default:
                     System.out.println("Validation error: \'" + rule + "\' rule does not exist");
             }
@@ -115,15 +146,70 @@ public class FormValidation {
         return errors;
     }
 
+    private static void exists(String value, String arg) {
+        String table = arg.split("\\.")[0];
+        String field = arg.split("\\.")[1];
+        try{
+            if(db == null){
+                System.out.println("Validation error: cannot apply database rules.");
+            }
+            else{
+                query = query.replace("table", table);
+                query = query.replace("field", field);
+                stmt = db.prepareStatement(query);
+                stmt.setString(1, value);
+                ResultSet res = stmt.executeQuery();
+
+                if(!res.next()){
+                    errors.add("exists");
+                }
+            }
+        }
+        catch(Exception e){
+            System.out.println("A database error occurred, probably due to a bad argument");
+            System.out.println(e);
+        }
+    }
+
+    private static void unique(String value, String arg) {
+        String table = arg.split("\\.")[0];
+        String field = arg.split("\\.")[1];
+        try{
+            if(db == null){
+                System.out.println("Validation error: cannot apply database rules.");
+            }
+            else{
+                query = query.replace("table", table);
+                query = query.replace("field", field);
+                stmt = db.prepareStatement(query);
+                stmt.setString(1, value);
+                ResultSet res = stmt.executeQuery();
+
+                if(res.next()){
+                    errors.add("unique");
+                }
+            }
+        }
+        catch(Exception e){
+            System.out.println("A database error occurred, probably due to a bad argument");
+            System.out.println(e);
+        }
+    }
 
     private static void regex(String value, String arg) {
-
+        try{
+            if(!value.matches(arg))
+                errors.add("regex");
+        }
+        catch(Exception e) {
+            System.out.println("Validation error: regex \'" + arg + "\' is not correct");
+        }
     }
 
     private static void email(String value) {
-        String emailRegex = "";
+        String emailRegex = "^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+(?:[a-zA-Z]{2}|aero|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel)$";
         if(!value.matches(emailRegex))
-            errors.add("pas bon email");
+            errors.add("email");
     }
 
     private static void integer(String value){
@@ -131,10 +217,34 @@ public class FormValidation {
             Long.parseLong(value);
         }
         catch(Exception e){
-            errors.add("Pas entier");
+            errors.add("integer");
         }
     }
 
 
+    public static void setMessages(HashMap<String, String> messages) {
+        FormValidation.customMessages = messages;
+    }
 
+    public static void setMessage(String rule, String message){
+        FormValidation.customMessages.put(rule, message);
+    }
+
+    public static HashMap<String, String> getMessages() {
+        customMessages.forEach((key,value)->{
+            if(errors.contains(key)){
+                finalMessages.put(key, value);
+            }
+        });
+        return finalMessages;
+    }
+
+    public static String getMessage(String rule){
+        if(errors.contains(rule) && customMessages.containsKey(rule)){
+            return customMessages.get(rule);
+        }
+        else{
+            return "";
+        }
+    }
 }
